@@ -17,7 +17,20 @@ class FirestoreService {
         .collection('locations')
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => doc.data()).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) {
+                final data = doc.data();
+                data['id'] = doc.id; // <-- doc id ni ham qo‘shamiz
+                return data;
+              }).toList(),
+        );
+  }
+
+  Future<void> deleteLocation(String docId) async {
+    await FirebaseFirestore.instance
+        .collection('locations')
+        .doc(docId)
+        .delete();
   }
 }
