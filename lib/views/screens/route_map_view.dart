@@ -4,6 +4,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 
 class RouteMapView extends StatefulWidget {
+  const RouteMapView({super.key});
+
   @override
   State<RouteMapView> createState() => RouteMapViewState();
 }
@@ -75,8 +77,9 @@ class RouteMapViewState extends State<RouteMapView> {
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: firestoreService.getLocations(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData)
+                if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
+                }
                 final locations = snapshot.data!;
                 return ListView.builder(
                   itemCount: locations.length,
