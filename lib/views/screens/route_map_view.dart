@@ -24,86 +24,49 @@ class RouteMapViewState extends State<RouteMapView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Sotti Yurgan Yo‘li")),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: firestoreService.getLocations(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData)
-                  return Center(child: CircularProgressIndicator());
-                final locations = snapshot.data!;
-                _markers.clear();
-                for (var loc in locations) {
-                  _markers.add(
-                    Marker(
-                      markerId: MarkerId(loc['id']),
-                      position: LatLng(loc['lat'], loc['lng']),
-                      infoWindow: InfoWindow(title: loc['name']),
-                    ),
-                  );
-                }
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: firestoreService.getLocations(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          final locations = snapshot.data!;
+          _markers.clear();
+          for (var loc in locations) {
+            _markers.add(
+              Marker(
+                markerId: MarkerId(loc['id']),
+                position: LatLng(loc['lat'], loc['lng']),
+                infoWindow: InfoWindow(title: loc['name']),
+              ),
+            );
+          }
 
-                return GoogleMap(
-                  initialCameraPosition: _initialPosition,
-                  mapType: MapType.normal,
-                  markers: _markers,
-                  onMapCreated: (controller) => mapController = controller,
-                  onTap: (LatLng position) async {
-                    String placeName = 'Noma\'lum joy';
-                    try {
-                      List<Placemark> placemarks =
-                          await placemarkFromCoordinates(
-                            position.latitude,
-                            position.longitude,
-                          );
-                      if (placemarks.isNotEmpty) {
-                        placeName = placemarks.first.street ?? 'Noma\'lum';
-                      }
-                    } catch (_) {}
-
-                    await firestoreService.addLocation(
-                      placeName,
-                      position.latitude,
-                      position.longitude,
-                    );
-                  },
+          return GoogleMap(
+            initialCameraPosition: _initialPosition,
+            mapType: MapType.normal,
+            markers: _markers,
+            onMapCreated: (controller) => mapController = controller,
+            onTap: (LatLng position) async {
+              String placeName = 'Noma\'lum joy';
+              try {
+                List<Placemark> placemarks = await placemarkFromCoordinates(
+                  position.latitude,
+                  position.longitude,
                 );
-              },
-            ),
-          ),
-          Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: firestoreService.getLocations(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
+                if (placemarks.isNotEmpty) {
+                  placeName = placemarks.first.street ?? 'Noma\'lum';
                 }
-                final locations = snapshot.data!;
-                return ListView.builder(
-                  itemCount: locations.length,
-                  itemBuilder: (context, index) {
-                    final loc = locations[index];
-                    return ListTile(
-                      leading: Icon(Icons.location_on),
-                      title: Text(loc['name']),
-                      subtitle: Text(
-                        'Lat: ${loc['lat'].toStringAsFixed(4)}, Lng: ${loc['lng'].toStringAsFixed(4)}',
-                      ),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          await firestoreService.deleteLocation(loc['id']);
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+              } catch (_) {}
+
+              await firestoreService.addLocation(
+                placeName,
+                position.latitude,
+                position.longitude,
+              );
+            },
+          );
+        },
       ),
     );
   }
